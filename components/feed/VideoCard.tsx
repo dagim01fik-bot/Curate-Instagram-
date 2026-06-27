@@ -1,10 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, StyleSheet, Dimensions, TouchableOpacity,
+  View, Text, StyleSheet, Dimensions,
   ActivityIndicator,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Video as ExpoVideo, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import { useEvent } from 'expo';
 import { colors } from '../../constants/colors';
 import { Video } from '../../types/content';
 import { Creator } from '../../types/content';
@@ -26,20 +27,25 @@ interface VideoCardProps {
 }
 
 export function VideoCard({ video, creator, isActive, onFeedback }: VideoCardProps) {
-  const [loading, setLoading] = useState(true);
   const [notInterestedVisible, setNotInterestedVisible] = useState(false);
-  const videoRef = useRef<ExpoVideo>(null);
   const blockCreator = usePreferencesStore((s) => s.blockCreator);
   const blockTopic = usePreferencesStore((s) => s.blockTopic);
 
+  const player = useVideoPlayer(video.videoUrl, (p) => {
+    p.loop = true;
+    p.muted = false;
+  });
+
+  const { status } = useEvent(player, 'statusChange', { status: player.status });
+  const loading = status === 'loading';
+
   useEffect(() => {
-    if (!videoRef.current) return;
     if (isActive) {
-      videoRef.current.playAsync().catch(() => {});
+      player.play();
     } else {
-      videoRef.current.pauseAsync().catch(() => {});
+      player.pause();
     }
-  }, [isActive]);
+  }, [isActive, player]);
 
   const handleFeedback = (type: FeedbackType) => {
     if (type === 'not_interested') {
@@ -84,18 +90,11 @@ export function VideoCard({ video, creator, isActive, onFeedback }: VideoCardPro
 
   return (
     <View style={styles.container}>
-      <ExpoVideo
-        ref={videoRef}
-        source={{ uri: video.videoUrl }}
+      <VideoView
+        player={player}
         style={styles.video}
-        resizeMode={ResizeMode.COVER}
-        isLooping
-        shouldPlay={isActive}
-        onLoadStart={() => setLoading(true)}
-        onLoad={() => setLoading(false)}
-        onPlaybackStatusUpdate={(status: AVPlaybackStatus) => {
-          if (status.isLoaded) setLoading(false);
-        }}
+        contentFit="cover"
+        nativeControls={false}
       />
 
       {loading && (

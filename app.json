@@ -30,9 +30,10 @@
     "plugins": [
       "expo-router",
       [
-        "expo-av",
+        "expo-video",
         {
-          "microphonePermission": false
+          "supportsBackgroundPlayback": false,
+          "supportsPictureInPicture": false
         }
       ],
       [

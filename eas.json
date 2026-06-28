@@ -13,6 +13,10 @@
     },
     "preview": {
       "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_YOUTUBE_API_KEY": "AIzaSyByr401VkO404-T6ELkBsfvsXB6XwPhYHE",
+        "EXPO_PUBLIC_PEXELS_API_KEY": "4KpbJwsF1S3us1ij1Tt3OE0SGZo946d0K8HzeB9X6PpHMQtl7ZqhRkRK"
+      },
       "android": {
         "buildType": "apk"
       }

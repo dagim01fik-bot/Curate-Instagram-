@@ -6,6 +6,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEvent } from 'expo';
+import { WebView } from 'react-native-webview';
 import { colors } from '../../constants/colors';
 import { Video } from '../../types/content';
 import { Creator } from '../../types/content';
@@ -31,21 +32,27 @@ export function VideoCard({ video, creator, isActive, onFeedback }: VideoCardPro
   const blockCreator = usePreferencesStore((s) => s.blockCreator);
   const blockTopic = usePreferencesStore((s) => s.blockTopic);
 
-  const player = useVideoPlayer(video.videoUrl, (p) => {
-    p.loop = true;
-    p.muted = false;
+  const isYouTube = video.source === 'youtube' && video.embedUrl;
+
+  const player = useVideoPlayer(!isYouTube ? video.videoUrl : '', (p) => {
+    if (!isYouTube) {
+      p.loop = true;
+      p.muted = false;
+    }
   });
 
   const { status } = useEvent(player, 'statusChange', { status: player.status });
-  const loading = status === 'loading';
+  const loading = !isYouTube && status === 'loading';
 
   useEffect(() => {
-    if (isActive) {
-      player.play();
-    } else {
-      player.pause();
+    if (!isYouTube) {
+      if (isActive) {
+        player.play();
+      } else {
+        player.pause();
+      }
     }
-  }, [isActive, player]);
+  }, [isActive, player, isYouTube]);
 
   const handleFeedback = (type: FeedbackType) => {
     if (type === 'not_interested') {
@@ -90,12 +97,22 @@ export function VideoCard({ video, creator, isActive, onFeedback }: VideoCardPro
 
   return (
     <View style={styles.container}>
-      <VideoView
-        player={player}
-        style={styles.video}
-        contentFit="cover"
-        nativeControls={false}
-      />
+      {isYouTube ? (
+        <WebView
+          source={{ uri: video.embedUrl! }}
+          style={styles.video}
+          allowsFullscreenVideo
+          mediaPlaybackRequiresUserAction={false}
+          javaScriptEnabled
+        />
+      ) : (
+        <VideoView
+          player={player}
+          style={styles.video}
+          contentFit="cover"
+          nativeControls={false}
+        />
+      )}
 
       {loading && (
         <View style={styles.loadingOverlay}>

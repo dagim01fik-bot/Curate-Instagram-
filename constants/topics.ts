@@ -22,3 +22,83 @@ export const TOPICS: TopicDef[] = [
   { id: 'sports', label: 'Sports', icon: '⚽' },
   { id: 'viral', label: 'Viral Videos', icon: '🔥' },
 ];
+
+export const TOPIC_API_MAP: Record<string, {
+  youtubeCategoryId?: string;
+  youtubeQuery?: string;
+  pexelsQuery: string;
+}> = {
+  'tech': {
+    youtubeCategoryId: '28',
+    youtubeQuery: 'technology news 2025',
+    pexelsQuery: 'technology',
+  },
+  'ai': {
+    youtubeQuery: 'artificial intelligence AI tutorial',
+    pexelsQuery: 'artificial intelligence',
+  },
+  'coding': {
+    youtubeQuery: 'programming coding tutorial',
+    pexelsQuery: 'coding programming',
+  },
+  'vibe-coding': {
+    youtubeQuery: 'vibe coding AI development windsurf cursor',
+    pexelsQuery: 'software development',
+  },
+  'comedy': {
+    youtubeCategoryId: '23',
+    youtubeQuery: 'funny comedy shorts',
+    pexelsQuery: 'funny people laughing',
+  },
+  'news': {
+    youtubeCategoryId: '25',
+    youtubeQuery: 'latest news today',
+    pexelsQuery: 'news broadcast',
+  },
+  'fitness': {
+    youtubeCategoryId: '17',
+    youtubeQuery: 'fitness workout exercise',
+    pexelsQuery: 'fitness workout',
+  },
+  'gaming': {
+    youtubeCategoryId: '20',
+    youtubeQuery: 'gaming highlights gameplay',
+    pexelsQuery: 'gaming esports',
+  },
+  'design': {
+    youtubeQuery: 'UI UX design tutorial',
+    pexelsQuery: 'graphic design creative',
+  },
+  'music': {
+    youtubeCategoryId: '10',
+    youtubeQuery: 'music video new',
+    pexelsQuery: 'music concert',
+  },
+  'science': {
+    youtubeCategoryId: '28',
+    youtubeQuery: 'science discovery explained',
+    pexelsQuery: 'science laboratory',
+  },
+  'finance': {
+    youtubeQuery: 'personal finance investing money',
+    pexelsQuery: 'finance money business',
+  },
+  'cooking': {
+    youtubeQuery: 'cooking recipe food',
+    pexelsQuery: 'cooking food kitchen',
+  },
+  'travel': {
+    youtubeCategoryId: '19',
+    youtubeQuery: 'travel vlog destination',
+    pexelsQuery: 'travel adventure nature',
+  },
+  'sports': {
+    youtubeCategoryId: '17',
+    youtubeQuery: 'sports highlights',
+    pexelsQuery: 'sports athletic',
+  },
+  'viral': {
+    youtubeQuery: 'viral video trending shorts',
+    pexelsQuery: 'viral trending',
+  },
+};

@@ -2,14 +2,16 @@ export interface Video {
   id: string;
   title: string;
   creatorId: string;
+  creatorName: string;
   topicIds: string[];
   keywords: string[];
   thumbnailUrl: string;
   videoUrl: string;
+  embedUrl: string | null;
   duration: number;
   views: number;
   publishedAt: string;
-  sourceApp: 'youtube' | 'tiktok' | 'curate';
+  source: 'youtube' | 'pexels' | 'curate';
 }
 
 export interface Post {

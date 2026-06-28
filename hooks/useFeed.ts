@@ -1,8 +1,11 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useFeedStore } from '../store/useFeedStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { useSchedule } from './useSchedule';
-import { getVideoFeed, getTextFeed } from '../services/contentService';
+import { fetchVideosByTopics } from '../services/contentService';
+import { applyContentFilter } from '../services/filterService';
+import { mockPosts } from '../data/mockPosts';
+import { rankFeed } from '../services/algorithm';
 import { config } from '../constants/config';
 
 export function useFeed() {
@@ -12,10 +15,12 @@ export function useFeed() {
   const textFeed = useFeedStore((s) => s.textFeed);
   const signalsSinceLastRank = useFeedStore((s) => s.signalsSinceLastRank);
   const resetSignalCount = useFeedStore((s) => s.resetSignalCount);
+  const [loading, setLoading] = useState(false);
 
   const activeSchedule = useSchedule();
 
-  const rerank = useCallback(() => {
+  const rerank = useCallback(async () => {
+    setLoading(true);
     const prefs = usePreferencesStore.getState();
     const { feedbackHistory, seenContentIds } = useFeedStore.getState();
     const preferences = {
@@ -27,11 +32,35 @@ export function useFeed() {
       blockedTopicIds: prefs.blockedTopicIds,
       schedules: prefs.schedules,
     };
-    const videos = getVideoFeed(preferences, feedbackHistory, activeSchedule, seenContentIds);
-    const posts = getTextFeed(preferences, feedbackHistory, activeSchedule, seenContentIds);
-    setVideoFeed(videos.slice(0, config.MAX_FEED_ITEMS) as any);
-    setTextFeed(posts.slice(0, config.MAX_FEED_ITEMS) as any);
-    resetSignalCount();
+
+    const activeTopics =
+      activeSchedule?.topicIds?.length
+        ? activeSchedule.topicIds
+        : preferences.followedTopicIds ?? [];
+
+    try {
+      if (activeTopics.length > 0) {
+        const rawVideos = await fetchVideosByTopics(activeTopics, 8);
+        const filteredVideos = applyContentFilter(rawVideos, preferences, feedbackHistory);
+        const unseenVideos = filteredVideos.filter((v) => !seenContentIds.has(v.id));
+        setVideoFeed(unseenVideos.slice(0, config.MAX_FEED_ITEMS) as any);
+      } else {
+        setVideoFeed([]);
+      }
+
+      const posts = rankFeed(
+        mockPosts.filter((p) => !seenContentIds.has(p.id)),
+        preferences,
+        feedbackHistory,
+        activeSchedule
+      );
+      setTextFeed(posts.slice(0, config.MAX_FEED_ITEMS) as any);
+    } catch (err) {
+      console.error('Feed load error:', err);
+    } finally {
+      setLoading(false);
+      resetSignalCount();
+    }
   }, [activeSchedule, setVideoFeed, setTextFeed, resetSignalCount]);
 
   const hasInitialized = useRef(false);
@@ -48,5 +77,5 @@ export function useFeed() {
     }
   }, [signalsSinceLastRank, rerank]);
 
-  return { videoFeed, textFeed, rerank };
+  return { videoFeed, textFeed, rerank, loading };
 }

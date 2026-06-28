@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useFeedStore } from '../store/useFeedStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { useSchedule } from './useSchedule';
@@ -16,6 +16,10 @@ export function useFeed() {
   const signalsSinceLastRank = useFeedStore((s) => s.signalsSinceLastRank);
   const resetSignalCount = useFeedStore((s) => s.resetSignalCount);
   const [loading, setLoading] = useState(false);
+
+  // Reactive subscriptions so the feed re-fetches when these change.
+  const followedTopicIds = usePreferencesStore((s) => s.followedTopicIds);
+  const isHydrated = usePreferencesStore((s) => s.isHydrated);
 
   const activeSchedule = useSchedule();
 
@@ -61,15 +65,14 @@ export function useFeed() {
       setLoading(false);
       resetSignalCount();
     }
-  }, [activeSchedule, setVideoFeed, setTextFeed, resetSignalCount]);
+  }, [activeSchedule, followedTopicIds, setVideoFeed, setTextFeed, resetSignalCount]);
 
-  const hasInitialized = useRef(false);
+  // Re-fetch once preferences are hydrated from storage, and whenever the
+  // active schedule or followed topics change.
   useEffect(() => {
-    if (!hasInitialized.current) {
-      hasInitialized.current = true;
-      rerank();
-    }
-  }, [rerank]);
+    if (!isHydrated) return;
+    rerank();
+  }, [isHydrated, rerank]);
 
   useEffect(() => {
     if (signalsSinceLastRank >= config.RERANK_AFTER_SIGNALS) {

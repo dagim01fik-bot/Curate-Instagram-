@@ -7,6 +7,7 @@ import { EmptyState } from '../ui/EmptyState';
 import { FeedbackType } from '../../types/feedback';
 import { mockCreators } from '../../data/mockCreators';
 import { ScheduleMode } from '../../types/preferences';
+import { useFeedStore } from '../../store/useFeedStore';
 import { useRouter } from 'expo-router';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -19,15 +20,30 @@ interface VideoFeedProps {
 
 export function VideoFeed({ videos, activeSchedule, onFeedback }: VideoFeedProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const listRef = useRef<FlatList<Video>>(null);
+  const markSeen = useFeedStore((s) => s.markSeen);
   const router = useRouter();
 
   const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-        setActiveIndex(viewableItems[0].index);
+        const idx = viewableItems[0].index;
+        setActiveIndex(idx);
+        const item = viewableItems[0].item as Video | undefined;
+        if (item) markSeen(item.id);
       }
     },
-    []
+    [markSeen]
+  );
+
+  const scrollToNext = useCallback(
+    (index: number) => {
+      const next = index + 1;
+      if (next < videos.length) {
+        listRef.current?.scrollToIndex({ index: next, animated: true });
+      }
+    },
+    [videos.length]
   );
 
   if (videos.length === 0) {
@@ -52,6 +68,7 @@ export function VideoFeed({ videos, activeSchedule, onFeedback }: VideoFeedProps
         </View>
       )}
       <FlatList
+        ref={listRef}
         data={videos}
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => {
@@ -61,9 +78,17 @@ export function VideoFeed({ videos, activeSchedule, onFeedback }: VideoFeedProps
               video={item}
               creator={creator}
               isActive={index === activeIndex}
-              onFeedback={(type) => onFeedback(item, type)}
+              onFeedback={(type) => {
+                if (type === 'skip') scrollToNext(index);
+                onFeedback(item, type);
+              }}
             />
           );
+        }}
+        onScrollToIndexFailed={({ index }) => {
+          setTimeout(() => {
+            listRef.current?.scrollToIndex({ index, animated: true });
+          }, 300);
         }}
         pagingEnabled
         showsVerticalScrollIndicator={false}

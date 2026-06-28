@@ -11,6 +11,7 @@ interface FeedStore {
   setVideoFeed: (items: Video[]) => void;
   setTextFeed: (items: Post[]) => void;
   removeFromFeed: (id: string) => void;
+  markSeen: (id: string) => void;
   addFeedback: (signal: FeedbackSignal) => void;
   resetFeedbackHistory: () => void;
   incrementSignals: () => void;
@@ -31,6 +32,11 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
     set((s) => ({
       videoFeed: s.videoFeed.filter((v) => v.id !== id),
       textFeed: s.textFeed.filter((p) => p.id !== id),
+      seenContentIds: new Set([...s.seenContentIds, id]),
+    })),
+
+  markSeen: (id) =>
+    set((s) => ({
       seenContentIds: new Set([...s.seenContentIds, id]),
     })),
 
